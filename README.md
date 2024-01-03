@@ -48,6 +48,8 @@ Like "Assembly-CSharp.dll.bytes".
 9. Create a new Assembly Definition and a script to download & apply updates before loading into main scene.
 (**Example scripts included!** )
 10. Start Jenkins job and enjoy!
+For unity editor command line, please type like this:
+```-nographics -batchmode -quit -executeMethod JenkinsBuild.BuildHotUpdateForWindows64```
 
 For details, you can visit the following docs and tutorials created by others to understand the content above better:
 1. https://www.youtube.com/watch?v=WdIG0af7S0g
