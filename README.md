@@ -56,4 +56,6 @@ For details, you can visit the following docs and tutorials created by others to
 2. https://hybridclr.doc.code-philosophy.com/en/docs/basic
 3. https://docs.unity3d.com/Packages/com.unity.addressables@1.20/manual/index.html
 
-Still feel confused? You may wait for my step by step tutorial on [YouTube](https://www.youtube.com/channel/UCRQdc3lSimZvrvIAkt3bTuw) about it (**should be coming soon with an example project**).
+Still feel confused? ~~You may wait for my step by step tutorial on [YouTube](https://www.youtube.com/channel/UCRQdc3lSimZvrvIAkt3bTuw) about it (**should be coming soon with an example project**).~~
+
+**I'm not very good at video editing, but don't worry, I will use Markdown documents and sample projects to do the tutorial instead.**
