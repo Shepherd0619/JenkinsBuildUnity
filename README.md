@@ -41,10 +41,14 @@ In simple, it should be like the following:
 3. Place "JenkinsBuild.cs" into "Assets/Editor".
 4. Add a Addressables group called "DLLs" and labels "HotUpdateDLL" and "AOTMetadataDLL".
 5. Start HybridCLR build.
-6. Copy and paste the dlls under "HybridCLRData/HotUpdateDlls" and "HybridCLRData/AssembliesPostIl2CppStrip" the project need. (**No need to copy all of them.** )
-7. Add ".bytes" to the end of the name of dll you copied.
-Like "Assembly-CSharp.dll.bytes".
-8. Add those dlls into "DLLs" group and add the corresponding label to them.
+6. ~~Copy and paste the dlls under "HybridCLRData/HotUpdateDlls" and "HybridCLRData/AssembliesPostIl2CppStrip" the project need. (**No need to copy all of them.** )~~
+7. ~~Add ".bytes" to the end of the name of dll you copied.~~
+~~Like "Assembly-CSharp.dll.bytes".~~
+8. ~~Add those dlls into "DLLs" group and add the corresponding label to them.~~
+
+No need to do 6, 7, 8 anymore since the script can do them automatically. 
+**Make sure your HybridCLRSettings and Addressables Settings are correct since the script do these jobs depends on them.**
+
 9. Create a new Assembly Definition and a script to download & apply updates before loading into main scene.
 (**Example scripts included!** )
 10. Start Jenkins job and enjoy!
