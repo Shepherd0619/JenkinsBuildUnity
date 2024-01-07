@@ -83,14 +83,21 @@ public class JenkinsBuild : MonoBehaviour
             return;
         }
 
-        string[] dllFiles = Directory.GetFiles(sourcePath, "*.dll");
+        // string[] dllFiles = Directory.GetFiles(sourcePath, "*.dll");
+        
+        // foreach (string dllFile in dllFiles)
+        // {
+        //     string fileName = Path.GetFileName(dllFile);
+        //     string destinationFile = Path.Combine(destinationPath, fileName + ".bytes");
+        //     Console.WriteLine($"[JenkinsBuild] Copy: {dllFile}");
+        //     File.Copy(dllFile, destinationFile, true);
+        // }
 
-        foreach (string dllFile in dllFiles)
+        List<string> hotUpdateAssemblyNames = SettingsUtil.HotUpdateAssemblyNamesExcludePreserved;
+        for (int i = 0; i < hotUpdateAssemblyNames.Count; i++)
         {
-            string fileName = Path.GetFileName(dllFile);
-            string destinationFile = Path.Combine(destinationPath, fileName + ".bytes");
-            Console.WriteLine($"[JenkinsBuild] Copy: {dllFile}");
-            File.Copy(dllFile, destinationFile, true);
+            Console.WriteLine($"[JenkinsBuild] Copy: {hotUpdateAssemblyNames[i] + ".dll"}");
+            File.Copy(sourcePath + "/" + hotUpdateAssemblyNames[i] + ".dll", Path.Combine(destinationPath, hotUpdateAssemblyNames[i] + ".dll.bytes"), true);
         }
 
         Console.WriteLine("[JenkinsBuild] Hot Update DLLs copied successfully!");
@@ -188,8 +195,13 @@ public class JenkinsBuild : MonoBehaviour
 
         AssetDatabase.Refresh();
 
-		// 刷新后开始拷贝DLL
-		SetHotUpdateDllLabel("Assets/HotUpdateDLLs/Assembly-CSharp.dll.bytes");
+		// 刷新后开始给DLL加标签
+		//SetHotUpdateDllLabel("Assets/HotUpdateDLLs/Assembly-CSharp.dll.bytes");
+        for (int i = 0; i < hotUpdateAssemblyNames.Count; i++)
+        {
+            SetHotUpdateDllLabel("Assets/HotUpdateDLLs/" + hotUpdateAssemblyNames[i] + ".dll.bytes");
+        }
+
 		foreach(string dllName in patchedAOTAssemblyList)
 		{
 			SetAOTMetadataDllLabel("Assets/HotUpdateDLLs/AOTMetadata/" + Path.GetFileName(dllName) + ".bytes");
@@ -267,6 +279,11 @@ public class JenkinsBuild : MonoBehaviour
 
     private static bool buildAddressableContent()
     {
+        string path = Path.Combine(Application.dataPath, "../ServerData/"+Enum.GetName(typeof(BuildTarget), EditorUserBuildSettings.activeBuildTarget));
+        if(Directory.Exists(path)){
+            Directory.Delete(path, true);
+        }
+
         AddressableAssetSettings.BuildPlayerContent(out AddressablesPlayerBuildResult result);
         bool success = string.IsNullOrEmpty(result.Error);
 
