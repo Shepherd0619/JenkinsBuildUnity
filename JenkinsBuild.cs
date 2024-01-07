@@ -18,6 +18,7 @@ public class JenkinsBuild : MonoBehaviour
 {
     // 重要提醒：建议先在工作电脑上配好Groups和Labels，本脚本虽说遇到新文件可以添加到Addressables，但是不太可靠。
 
+    [MenuItem("Shepherd0619/Build Hot Update")]
     /// <summary>
     /// 开始执行HybridCLR热更打包，默认打当前平台
     /// </summary>
