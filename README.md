@@ -63,3 +63,13 @@ For details, you can visit the following docs and tutorials created by others to
 Still feel confused? ~~You may wait for my step by step tutorial on [YouTube](https://www.youtube.com/channel/UCRQdc3lSimZvrvIAkt3bTuw) about it (**should be coming soon with an example project**).~~
 
 **I'm not very good at video editing, but don't worry, I will use Markdown documents and sample projects to do the tutorial instead.**
+
+For Chinese, there are already tutorials on my CSDN blog!
+
+来自中国的朋友！你们可以访问我的CSDN博客来获取相关教程！
+
+1. https://blog.csdn.net/u012587406/article/details/135260464
+2. https://blog.csdn.net/u012587406/article/details/135441946
+
+# References
+1. [0oSTrAngeRo0/AutoBuild](https://github.com/0oSTrAngeRo0/AutoBuild) for command line args.
