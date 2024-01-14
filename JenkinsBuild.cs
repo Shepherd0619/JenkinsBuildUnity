@@ -5,6 +5,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
 using HybridCLR.Editor;
 using HybridCLR.Editor.Commands;
 using HybridCLR.Editor.Settings;
@@ -36,6 +38,11 @@ public class JenkinsBuild : MonoBehaviour
         Console.WriteLine(
             $"[JenkinsBuild] Start building hot update for {Enum.GetName(typeof(BuildTarget), target)}"
         );
+
+		// 打开热更新
+		HybridCLRSettings.Instance.enable = true;
+		HybridCLRSettings.Save();
+
         try
         {
             CompileDllCommand.CompileDll(target);
@@ -231,11 +238,105 @@ public class JenkinsBuild : MonoBehaviour
         BuildHotUpdate(BuildTarget.Android);
     }
 
-    /// <summary>
-    /// 将热更DLL加入到Addressables
-    /// </summary>
-    /// <param name="dllPath">DLL完整路径</param>
-    private static void SetHotUpdateDllLabel(string dllPath)
+	public static void BuildWindowsServer()
+	{
+		// 获取命令行参数
+        string[] args = Environment.GetCommandLineArgs();
+
+		// 获取scenes参数
+        string[] scenes = GetArgument(args, "scenes");
+        if (scenes == null || scenes.Length <= 0) return;
+
+		// 获取targetPath参数
+        string[] targetPath = GetArgument(args, "targetPath");
+		if (targetPath == null || targetPath.Length <= 0) return;
+
+		BuildPlayerOptions options = new BuildPlayerOptions();
+		options.target = BuildTarget.StandaloneWindows64;
+		options.subtarget = (int)StandaloneBuildSubtarget.Server;
+		options.scenes = scenes;
+		options.locationPathName = targetPath[0];
+
+		// 关闭热更新
+		HybridCLRSettings.Instance.enable = false;
+		HybridCLRSettings.Save();
+		
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < scenes.Length; i++)
+		{
+			sb.Append(scenes[i] + "; ");
+		}
+		Console.WriteLine($"[JenkinsBuild] Start building WindowsServer! Scenes: {sb.ToString()}, TargetPath: {targetPath[0]}");
+		BuildPipeline.BuildPlayer(options);
+	}
+
+	public static void BuildLinuxServer()
+	{
+		// 获取命令行参数
+        string[] args = Environment.GetCommandLineArgs();
+
+		// 获取scenes参数
+        string[] scenes = GetArgument(args, "scenes");
+        if (scenes == null || scenes.Length <= 0) return;
+
+		// 获取targetPath参数
+        string[] targetPath = GetArgument(args, "targetPath");
+		if (targetPath == null || targetPath.Length <= 0) return;
+
+		BuildPlayerOptions options = new BuildPlayerOptions();
+		options.target = BuildTarget.StandaloneLinux64;
+		options.subtarget = (int)StandaloneBuildSubtarget.Server;
+		options.scenes = scenes;
+		options.locationPathName = targetPath[0];
+
+		// 关闭热更新
+		HybridCLRSettings.Instance.enable = false;
+		HybridCLRSettings.Save();
+
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < scenes.Length; i++)
+		{
+			sb.Append(scenes[i] + "\n");
+		}
+		Console.WriteLine($"[JenkinsBuild] Start building LinuxServer! Scenes: {sb.ToString()}, TargetPath: {targetPath[0]}");
+		BuildPipeline.BuildPlayer(options);
+	}
+
+	/// <summary>
+	/// 获取某个参数
+	/// </summary>
+	/// <param name="args">全部的命令行参数</param>
+	/// <param name="name">要获取的参数名称</param>
+	/// <param name="fs">日志文件</param>
+	/// <param name="shouldLog">是否在日志中输出参数</param>
+	/// <returns>所求参数</returns>
+	private static string[] GetArgument(string[] args, string name)
+	{
+		int start = Array.FindIndex(args, arg => arg == $"-{name}");
+		if (start < 0)
+		{
+			Console.WriteLine($"[JenkinsBuild.GetArgument] Can not find argument: {name}");
+			return null;
+		}
+		start++;
+		int end = Array.FindIndex(args, start, arg => arg[0] == '-');
+		if (end < 0) end = args.Length;
+		int count = end - start;
+		if (count <= 0)
+		{
+			Console.WriteLine($"[JenkinsBuild.GetArgument] Can not find argument value: {name}, Count: {count}, Start: {start}, End: {end}");
+			return null;
+		}
+
+		string[] result = args.Skip(start).Take(count).ToArray();
+		return result;
+	}
+
+	/// <summary>
+	/// 将热更DLL加入到Addressables
+	/// </summary>
+	/// <param name="dllPath">DLL完整路径</param>
+	private static void SetHotUpdateDllLabel(string dllPath)
     {
         var settings = AddressableAssetSettingsDefaultObject.Settings;
         AddressableAssetGroup group = settings.FindGroup("DLLs");
