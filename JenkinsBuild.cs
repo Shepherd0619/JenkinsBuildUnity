@@ -15,7 +15,7 @@ using UnityEditor.AddressableAssets.Build;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEngine;
 
-public class JenkinsBuild : MonoBehaviour
+public static class JenkinsBuild
 {
     // 重要提醒：建议先在工作电脑上配好Groups和Labels，本脚本虽说遇到新文件可以添加到Addressable，但是不太可靠。
 
@@ -221,7 +221,7 @@ public class JenkinsBuild : MonoBehaviour
 		}
 
 		Console.WriteLine("[JenkinsBuild] Start building Addressables!");
-		BuildAddressableContent(group, target);
+		BuildAddressableContent();
     }
 
     public static void BuildHotUpdateForWindows64()
