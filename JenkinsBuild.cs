@@ -2,7 +2,6 @@
 // Shepherd Zhu
 // Jenkins Build Helper
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,9 +15,9 @@ using UnityEditor.AddressableAssets.Build;
 using UnityEditor.AddressableAssets.Settings;
 using UnityEngine;
 
-public static class JenkinsBuild
+public class JenkinsBuild : MonoBehaviour
 {
-    // 重要提醒：建议先在工作电脑上配好Groups和Labels，本脚本虽说遇到新文件可以添加到Addressables，但是不太可靠。
+    // 重要提醒：建议先在工作电脑上配好Groups和Labels，本脚本虽说遇到新文件可以添加到Addressable，但是不太可靠。
 
     /// <summary>
     /// 开始执行HybridCLR热更打包，默认打当前平台
@@ -26,26 +25,29 @@ public static class JenkinsBuild
     [MenuItem("Shepherd0619/Build Hot Update")]
     public static void BuildHotUpdate()
     {
-        BuildHotUpdate(EditorUserBuildSettings.activeBuildTarget);
+	    if (EditorUtility.DisplayDialog("Warning",
+		        $"You are attempting to build hot update for {EditorUserBuildSettings.activeBuildTarget}.",
+		        "Proceed", "Quit"))
+	    {
+		    BuildHotUpdate(EditorUserBuildSettings.selectedBuildTargetGroup, EditorUserBuildSettings.activeBuildTarget);
+	    }
     }
 
     /// <summary>
     /// 开始执行HybridCLR热更打包
     /// </summary>
     /// <param name="target">目标平台</param>
-    public static void BuildHotUpdate(BuildTarget target)
+    public static void BuildHotUpdate(BuildTargetGroup group, BuildTarget target)
     {
         Console.WriteLine(
             $"[JenkinsBuild] Start building hot update for {Enum.GetName(typeof(BuildTarget), target)}"
         );
 
-        // 屏蔽Addressable打包
-        AddressableAssetSettingsDefaultObject.Settings.BuildAddressablesWithPlayerBuild =
-            AddressableAssetSettings.PlayerBuildOption.DoNotBuildWithPlayer;
+        EditorUserBuildSettings.SwitchActiveBuildTarget(group, target);
 
-        // 打开热更新
-        HybridCLRSettings.Instance.enable = true;
-        HybridCLRSettings.Save();
+		// 打开热更新
+		HybridCLRSettings.Instance.enable = true;
+		HybridCLRSettings.Save();
 
         try
         {
@@ -95,7 +97,7 @@ public static class JenkinsBuild
         }
 
         // string[] dllFiles = Directory.GetFiles(sourcePath, "*.dll");
-
+        
         // foreach (string dllFile in dllFiles)
         // {
         //     string fileName = Path.GetFileName(dllFile);
@@ -108,11 +110,7 @@ public static class JenkinsBuild
         for (int i = 0; i < hotUpdateAssemblyNames.Count; i++)
         {
             Console.WriteLine($"[JenkinsBuild] Copy: {hotUpdateAssemblyNames[i] + ".dll"}");
-            File.Copy(
-                sourcePath + "/" + hotUpdateAssemblyNames[i] + ".dll",
-                Path.Combine(destinationPath, hotUpdateAssemblyNames[i] + ".dll.bytes"),
-                true
-            );
+            File.Copy(sourcePath + "/" + hotUpdateAssemblyNames[i] + ".dll", Path.Combine(destinationPath, hotUpdateAssemblyNames[i] + ".dll.bytes"), true);
         }
 
         Console.WriteLine("[JenkinsBuild] Hot Update DLLs copied successfully!");
@@ -171,8 +169,10 @@ public static class JenkinsBuild
                     {
                         int startIndex = aotReferencesFileContent[i].IndexOf("\"") + 1;
                         int endIndex = aotReferencesFileContent[i].LastIndexOf("\"");
-                        string dllName = aotReferencesFileContent[i]
-                            .Substring(startIndex, endIndex - startIndex);
+                        string dllName = aotReferencesFileContent[i].Substring(
+                            startIndex,
+                            endIndex - startIndex
+                        );
                         patchedAOTAssemblyList.Add(dllName);
                     }
                     i++;
@@ -208,162 +208,139 @@ public static class JenkinsBuild
 
         AssetDatabase.Refresh();
 
-        // 刷新后开始给DLL加标签
-        //SetHotUpdateDllLabel("Assets/HotUpdateDLLs/Assembly-CSharp.dll.bytes");
+		// 刷新后开始给DLL加标签
+		//SetHotUpdateDllLabel("Assets/HotUpdateDLLs/Assembly-CSharp.dll.bytes");
         for (int i = 0; i < hotUpdateAssemblyNames.Count; i++)
         {
-            SetHotUpdateDllLabel(
-                "Assets/HotUpdateDLLs/" + hotUpdateAssemblyNames[i] + ".dll.bytes"
-            );
+            SetHotUpdateDllLabel("Assets/HotUpdateDLLs/" + hotUpdateAssemblyNames[i] + ".dll.bytes");
         }
 
-        foreach (string dllName in patchedAOTAssemblyList)
-        {
-            SetAOTMetadataDllLabel(
-                "Assets/HotUpdateDLLs/AOTMetadata/" + Path.GetFileName(dllName) + ".bytes"
-            );
-        }
+		foreach(string dllName in patchedAOTAssemblyList)
+		{
+			SetAOTMetadataDllLabel("Assets/HotUpdateDLLs/AOTMetadata/" + Path.GetFileName(dllName) + ".bytes");
+		}
 
-        Console.WriteLine("[JenkinsBuild] Start building Addressables!");
-        buildAddressableContent();
+		Console.WriteLine("[JenkinsBuild] Start building Addressables!");
+		BuildAddressableContent(group, target);
     }
 
     public static void BuildHotUpdateForWindows64()
     {
-        BuildHotUpdate(BuildTarget.StandaloneWindows64);
+        BuildHotUpdate(BuildTargetGroup.Standalone, BuildTarget.StandaloneWindows64);
     }
 
     public static void BuildHotUpdateForiOS()
     {
-        BuildHotUpdate(BuildTarget.iOS);
+        BuildHotUpdate(BuildTargetGroup.iOS, BuildTarget.iOS);
     }
 
     public static void BuildHotUpdateForLinux64()
     {
-        BuildHotUpdate(BuildTarget.StandaloneLinux64);
+        BuildHotUpdate(BuildTargetGroup.Standalone, BuildTarget.StandaloneLinux64);
     }
 
     public static void BuildHotUpdateForAndroid()
     {
-        BuildHotUpdate(BuildTarget.Android);
+        BuildHotUpdate(BuildTargetGroup.Android, BuildTarget.Android);
     }
 
-    public static void BuildWindowsServer()
-    {
-        // 获取命令行参数
+	public static void BuildWindowsServer()
+	{
+		// 获取命令行参数
         string[] args = Environment.GetCommandLineArgs();
 
-        // 获取scenes参数
+		// 获取scenes参数
         string[] scenes = GetArgument(args, "scenes");
-        if (scenes == null || scenes.Length <= 0)
-            return;
+        if (scenes == null || scenes.Length <= 0) return;
 
-        // 获取targetPath参数
+		// 获取targetPath参数
         string[] targetPath = GetArgument(args, "targetPath");
-        if (targetPath == null || targetPath.Length <= 0)
-            return;
+		if (targetPath == null || targetPath.Length <= 0) return;
 
-        BuildPlayerOptions options = new BuildPlayerOptions();
-        options.target = BuildTarget.StandaloneWindows64;
-        options.subtarget = (int)StandaloneBuildSubtarget.Server;
-        options.scenes = scenes;
-        options.locationPathName = targetPath[0];
+		BuildPlayerOptions options = new BuildPlayerOptions();
+		options.target = BuildTarget.StandaloneWindows64;
+		options.subtarget = (int)StandaloneBuildSubtarget.Server;
+		options.scenes = scenes;
+		options.locationPathName = targetPath[0];
 
-        // 关闭热更新
-        HybridCLRSettings.Instance.enable = false;
-        HybridCLRSettings.Save();
+		// 关闭热更新
+		HybridCLRSettings.Instance.enable = false;
+		HybridCLRSettings.Save();
+		
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < scenes.Length; i++)
+		{
+			sb.Append(scenes[i] + "; ");
+		}
+		Console.WriteLine($"[JenkinsBuild] Start building WindowsServer! Scenes: {sb.ToString()}, TargetPath: {targetPath[0]}");
+		BuildPipeline.BuildPlayer(options);
+	}
 
-        // 屏蔽Addressable打包
-        AddressableAssetSettingsDefaultObject.Settings.BuildAddressablesWithPlayerBuild =
-            AddressableAssetSettings.PlayerBuildOption.DoNotBuildWithPlayer;
-
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < scenes.Length; i++)
-        {
-            sb.Append(scenes[i] + "; ");
-        }
-        Console.WriteLine(
-            $"[JenkinsBuild] Start building WindowsServer! Scenes: {sb.ToString()}, TargetPath: {targetPath[0]}"
-        );
-        BuildPipeline.BuildPlayer(options);
-    }
-
-    public static void BuildLinuxServer()
-    {
-        // 获取命令行参数
+	public static void BuildLinuxServer()
+	{
+		// 获取命令行参数
         string[] args = Environment.GetCommandLineArgs();
 
-        // 获取scenes参数
+		// 获取scenes参数
         string[] scenes = GetArgument(args, "scenes");
-        if (scenes == null || scenes.Length <= 0)
-            return;
+        if (scenes == null || scenes.Length <= 0) return;
 
-        // 获取targetPath参数
+		// 获取targetPath参数
         string[] targetPath = GetArgument(args, "targetPath");
-        if (targetPath == null || targetPath.Length <= 0)
-            return;
+		if (targetPath == null || targetPath.Length <= 0) return;
 
-        BuildPlayerOptions options = new BuildPlayerOptions();
-        options.target = BuildTarget.StandaloneLinux64;
-        options.subtarget = (int)StandaloneBuildSubtarget.Server;
-        options.scenes = scenes;
-        options.locationPathName = targetPath[0];
+		BuildPlayerOptions options = new BuildPlayerOptions();
+		options.target = BuildTarget.StandaloneLinux64;
+		options.subtarget = (int)StandaloneBuildSubtarget.Server;
+		options.scenes = scenes;
+		options.locationPathName = targetPath[0];
 
-        // 关闭热更新
-        HybridCLRSettings.Instance.enable = false;
-        HybridCLRSettings.Save();
+		// 关闭热更新
+		HybridCLRSettings.Instance.enable = false;
+		HybridCLRSettings.Save();
 
-        // 屏蔽Addressable打包
-        AddressableAssetSettingsDefaultObject.Settings.BuildAddressablesWithPlayerBuild =
-            AddressableAssetSettings.PlayerBuildOption.DoNotBuildWithPlayer;
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < scenes.Length; i++)
+		{
+			sb.Append(scenes[i] + "\n");
+		}
+		Console.WriteLine($"[JenkinsBuild] Start building LinuxServer! Scenes: {sb.ToString()}, TargetPath: {targetPath[0]}");
+		BuildPipeline.BuildPlayer(options);
+	}
 
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < scenes.Length; i++)
-        {
-            sb.Append(scenes[i] + "\n");
-        }
-        Console.WriteLine(
-            $"[JenkinsBuild] Start building LinuxServer! Scenes: {sb.ToString()}, TargetPath: {targetPath[0]}"
-        );
-        BuildPipeline.BuildPlayer(options);
-    }
+	/// <summary>
+	/// 获取某个参数
+	/// </summary>
+	/// <param name="args">全部的命令行参数</param>
+	/// <param name="name">要获取的参数名称</param>
+	/// <returns>所求参数</returns>
+	private static string[] GetArgument(string[] args, string name)
+	{
+		int start = Array.FindIndex(args, arg => arg == $"-{name}");
+		if (start < 0)
+		{
+			Console.WriteLine($"[JenkinsBuild.GetArgument] Can not find argument: {name}");
+			return null;
+		}
+		start++;
+		int end = Array.FindIndex(args, start, arg => arg[0] == '-');
+		if (end < 0) end = args.Length;
+		int count = end - start;
+		if (count <= 0)
+		{
+			Console.WriteLine($"[JenkinsBuild.GetArgument] Can not find argument value: {name}, Count: {count}, Start: {start}, End: {end}");
+			return null;
+		}
 
-    /// <summary>
-    /// 获取某个参数
-    /// </summary>
-    /// <param name="args">全部的命令行参数</param>
-    /// <param name="name">要获取的参数名称</param>
-    /// <returns>所求参数</returns>
-    private static string[] GetArgument(string[] args, string name)
-    {
-        int start = Array.FindIndex(args, arg => arg == $"-{name}");
-        if (start < 0)
-        {
-            Console.WriteLine($"[JenkinsBuild.GetArgument] Can not find argument: {name}");
-            return null;
-        }
-        start++;
-        int end = Array.FindIndex(args, start, arg => arg[0] == '-');
-        if (end < 0)
-            end = args.Length;
-        int count = end - start;
-        if (count <= 0)
-        {
-            Console.WriteLine(
-                $"[JenkinsBuild.GetArgument] Can not find argument value: {name}, Count: {count}, Start: {start}, End: {end}"
-            );
-            return null;
-        }
+		string[] result = args.Skip(start).Take(count).ToArray();
+		return result;
+	}
 
-        string[] result = args.Skip(start).Take(count).ToArray();
-        return result;
-    }
-
-    /// <summary>
-    /// 将热更DLL加入到Addressables
-    /// </summary>
-    /// <param name="dllPath">DLL完整路径</param>
-    private static void SetHotUpdateDllLabel(string dllPath)
+	/// <summary>
+	/// 将热更DLL加入到Addressable
+	/// </summary>
+	/// <param name="dllPath">DLL完整路径</param>
+	private static void SetHotUpdateDllLabel(string dllPath)
     {
         var settings = AddressableAssetSettingsDefaultObject.Settings;
         AddressableAssetGroup group = settings.FindGroup("DLLs");
@@ -376,14 +353,14 @@ public static class JenkinsBuild
             return;
         }
         var entry = settings.CreateOrMoveEntry(guid, group);
-        entry.labels.Add("default");
+		entry.labels.Add("default");
         entry.labels.Add("HotUpdateDLL");
         entry.address = Path.GetFileName(dllPath);
         settings.SetDirty(AddressableAssetSettings.ModificationEvent.EntryMoved, entry, true);
     }
 
     /// <summary>
-    /// 将AOT元数据DLL加入到Addressables
+    /// 将AOT元数据DLL加入到Addressable
     /// </summary>
     /// <param name="dllPath">DLL完整路径</param>
     private static void SetAOTMetadataDllLabel(string dllPath)
@@ -399,21 +376,20 @@ public static class JenkinsBuild
             return;
         }
         var entry = settings.CreateOrMoveEntry(guid, group);
-        entry.labels.Add("default");
+		entry.labels.Add("default");
         entry.labels.Add("AOTMetadataDLL");
         entry.address = Path.GetFileName(dllPath);
         settings.SetDirty(AddressableAssetSettings.ModificationEvent.EntryMoved, entry, true);
     }
 
-    private static bool buildAddressableContent()
+	/// <summary>
+	/// 打当前平台的打包Addressable
+	/// </summary>
+	/// <returns></returns>
+    private static bool BuildAddressableContent()
     {
-        string path = Path.Combine(
-            Application.dataPath,
-            "../ServerData/"
-                + Enum.GetName(typeof(BuildTarget), EditorUserBuildSettings.activeBuildTarget)
-        );
-        if (Directory.Exists(path))
-        {
+	    string path = Path.Combine(Application.dataPath, "../ServerData/"+Enum.GetName(typeof(BuildTarget), EditorUserBuildSettings.activeBuildTarget));
+        if(Directory.Exists(path)){
             Directory.Delete(path, true);
         }
 
@@ -422,10 +398,7 @@ public static class JenkinsBuild
 
         if (!success)
         {
-            Console.WriteLine(
-                "[JenkinsBuild.buildAddressableContent] Addressables build error encountered: "
-                    + result.Error
-            );
+            Console.WriteLine("[JenkinsBuild.BuildAddressableContent] Addressable build error encountered: " + result.Error);
         }
         return success;
     }
