@@ -25,9 +25,10 @@ In humans word, a solution that only build the modified part and deliver it to p
 
 # Why do I need CI/CD?
 1. You will no longer have to pause your current work because of building on your PC.
-2. You will no longer have to check your collaborator's commit manually.
-3. Testers/boss can build the client by themselves, instead of a phone call asking you to put down what you are doing and go help them.
-4. ......
+2. You will no longer have to perform the complicated building process again and again.
+3. You will no longer have to check your collaborator's commit manually.
+4. Testers/boss can build the client by themselves, instead of a phone call asking you to put down what you are doing and go help them.
+5. ......
 
 # Why do I need Hot Update?
 1. Push fixes to players as quickly as possible without waiting for App Store/Google Play's review.
