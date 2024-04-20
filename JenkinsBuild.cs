@@ -91,9 +91,9 @@ public static class JenkinsBuild
         if (!Directory.Exists(destinationPath))
         {
             Console.WriteLine(
-                "[JenkinsBuild] Destination directory does not exist! Abort the build!"
+                "[JenkinsBuild] Destination directory does not exist!"
             );
-            return;
+            Directory.CreateDirectory(destinationPath);
         }
 
         // string[] dllFiles = Directory.GetFiles(sourcePath, "*.dll");
@@ -134,9 +134,9 @@ public static class JenkinsBuild
         if (!Directory.Exists(destinationPath))
         {
             Console.WriteLine(
-                "[JenkinsBuild] Destination directory does not exist! Abort the build!"
+                "[JenkinsBuild] Destination directory does not exist!"
             );
-            return;
+            Directory.CreateDirectory(destinationPath);
         }
 
         // 获取AOTGenericReferences.cs文件的路径
