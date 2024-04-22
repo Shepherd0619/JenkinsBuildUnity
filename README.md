@@ -52,7 +52,8 @@ No need to do 6, 7, 8 anymore since the script can do them automatically.
 
 9. Create a new Assembly Definition and a script to download & apply updates before loading into main scene.
 (**Example scripts included!** )
-10. Start Jenkins job and enjoy!
+10. Set DisableCatalogUpdateOnStart to true which can be found in Addressable Settings since the script will take over the catalog update.
+11. Start Jenkins job and enjoy!
 For unity editor command line, please type like this:
 ```-nographics -batchmode -quit -executeMethod JenkinsBuild.BuildHotUpdateForWindows64```
 
