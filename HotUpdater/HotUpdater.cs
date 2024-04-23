@@ -123,9 +123,10 @@ public class HotUpdater : MonoBehaviour
 		yield return downloadDependenciesHandle;
 		if (downloadDependenciesHandle.Status == AsyncOperationStatus.Succeeded)
 		{
+			Addressables.Release(downloadDependenciesHandle);
 			string time = string.Format("{0:yyyyMMddHHMMss}", DateTime.Now);
 			PlayerPrefs.SetString("ResVersion", time);
-			progressText = "LoadMetadataForAOTDLLs";
+			progressText = "Patching...";
 			StartCoroutine(EnterGame());
 		}
 		else
