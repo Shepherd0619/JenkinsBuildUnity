@@ -355,7 +355,8 @@ public static class JenkinsBuild
         var entry = settings.CreateOrMoveEntry(guid, group);
 		entry.labels.Add("default");
         entry.labels.Add("HotUpdateDLL");
-        entry.address = Path.GetFileName(dllPath);
+        // entry.address = Path.GetFileName(dllPath);
+        entry.address = dllPath;
         settings.SetDirty(AddressableAssetSettings.ModificationEvent.EntryMoved, entry, true);
     }
 
@@ -378,7 +379,8 @@ public static class JenkinsBuild
         var entry = settings.CreateOrMoveEntry(guid, group);
 		entry.labels.Add("default");
         entry.labels.Add("AOTMetadataDLL");
-        entry.address = Path.GetFileName(dllPath);
+        // entry.address = Path.GetFileName(dllPath);
+        entry.address = dllPath;
         settings.SetDirty(AddressableAssetSettings.ModificationEvent.EntryMoved, entry, true);
     }
 
