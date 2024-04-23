@@ -183,8 +183,9 @@ public class HotUpdater : MonoBehaviour
 	/// <returns></returns>
 	IEnumerator EnterGame()
 	{
-		yield return LoadMetadataForAOTDLLs();
 		yield return LoadHotfixDLLs();
+		yield return LoadMetadataForAOTDLLs();
+	
 		Addressables.LoadSceneAsync("MainMenu").Completed += (obj) =>
 		{
 			if (obj.Status == AsyncOperationStatus.Succeeded)
